@@ -162,7 +162,7 @@
         <option value="Administrativo: DEUT">Administrativo: DEUT</option>
       </select>
 
-      <label for="personal">Personal asignado</label>
+      <label for="personal">Personal asignado *</label>
       <select id="personal" required>
         <option value="">-- Seleccionar --</option>
         <option>Bazante Nadia Romina</option>
@@ -293,10 +293,12 @@ const formatDate = iso => {
   if (isNaN(d)) return iso;
   return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
 };
+const parseDate = s => (s ? new Date(s) : null);
 
 function attachRealtimeListener(){
   db.ref('causes').on('value', snap => {
-    causes = Object.values(snap.val()||{}).sort((a,b)=>(a.expediente||'').localeCompare(b.expediente||''));
+    const val = snap.val() || {};
+    causes = Object.values(val).sort((a,b)=> (a.expediente||'').localeCompare(b.expediente||''));
     refreshSelects();
     refreshTable();
   });
@@ -325,27 +327,206 @@ function refreshSelects(){
   });
 }
 
+function byId(id){ return causes.find(c=>c.id===id); }
+function labelsFromIds(arr){
+  if(!Array.isArray(arr) || !arr.length) return '—';
+  return arr.map(id=>{
+    const c = byId(id);
+    return c ? `${c.expediente}` : id;
+  }).join(', ');
+}
+
+function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]));}
+
 function renderRow(c){
   const tr=document.createElement('tr');
   tr.innerHTML=`
     <td><strong>${escapeHtml(c.expediente)}</strong></td>
     <td><div>${escapeHtml(c.caratula)||'<span class="muted">—</span>'}</div><div class="small chip">${escapeHtml(c.tipo)}</div></td>
     <td><div>${escapeHtml(c.personal)||'<span class="muted">—</span>'}</div><div class="small">${formatDate(c.fechaPase)}</div></td>
-    <td><div class="small"><strong>Vinc:</strong> ${(c.vinculadas||[]).join(', ')||'<span class="muted">—</span>'}</div>
-        <div class="small" style="margin-top:6px"><strong>Acum:</strong> ${(c.acumuladas||[]).join(', ')||'<span class="muted">—</span>'}</div></td>
-    <td><div class="flex"><button class="ghost btn-view" data-id="${c.id}">Ver</button><button class="ghost btn-edit" data-id="${c.id}">Editar</button><button class="danger btn-delete" data-id="${c.id}">Eliminar</button></div></td>`;
+    <td>
+      <div class="small"><strong>Vinc:</strong> ${labelsFromIds(c.vinculadas)}</div>
+      <div class="small" style="margin-top:6px"><strong>Acum:</strong> ${labelsFromIds(c.acumuladas)}</div>
+    </td>
+    <td>
+      <div class="flex">
+        <button class="ghost btn-view" data-id="${c.id}">Ver</button>
+        <button class="ghost btn-edit" data-id="${c.id}">Editar</button>
+        <button class="danger btn-delete" data-id="${c.id}">Eliminar</button>
+      </div>
+    </td>`;
   return tr;
+}
+
+function getFilters(){
+  return {
+    q: ($('#search').value||'').toLowerCase().trim(),
+    tipo: $('#filter-tipo').value,
+    personal: $('#filter-personal').value,
+    from: $('#filter-date-from').value ? parseDate($('#filter-date-from').value) : null,
+    to: $('#filter-date-to').value ? new Date(new Date($('#filter-date-to').value).getTime()+24*60*60*1000-1) : null // inclusive
+  };
+}
+
+function applyFilters(list){
+  const {q,tipo,personal,from,to} = getFilters();
+  return list.filter(c=>{
+    const hayQ = !q || [c.expediente,c.caratula,c.personal].some(v=> String(v||'').toLowerCase().includes(q));
+    const hayTipo = !tipo || c.tipo===tipo;
+    const hayPers = !personal || c.personal===personal;
+    const f = c.fechaPase ? new Date(c.fechaPase) : null;
+    const hayDesde = !from || (f && f >= from);
+    const hayHasta = !to || (f && f <= to);
+    return hayQ && hayTipo && hayPers && hayDesde && hayHasta;
+  });
 }
 
 function refreshTable(){
   const tbody=$('#table-body');tbody.innerHTML='';
-  causes.forEach(c=>tbody.appendChild(renderRow(c)));
+  const filtered = applyFilters(causes);
+  filtered.forEach(c=>tbody.appendChild(renderRow(c)));
 }
 
-function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function selectedValues(selectEl){
+  return Array.from(selectEl.selectedOptions).map(o=>o.value);
+}
+
+function setMultiSelect(selectEl, values){
+  const set = new Set(values||[]);
+  Array.from(selectEl.options).forEach(opt=>{ opt.selected = set.has(opt.value); });
+}
+
+function clearForm(){
+  inputs.id.value='';
+  inputs.expediente.value='';
+  inputs.caratula.value='';
+  inputs.tipo.value='';
+  inputs.personal.value='';
+  inputs.fechaPase.value='';
+  inputs.devolMotivo.value='';
+  inputs.devolFecha.value='';
+  inputs.remDetalle.value='';
+  inputs.remFecha.value='';
+  setMultiSelect(inputs.vinculadas,[]);
+  setMultiSelect(inputs.acumuladas,[]);
+  $('#save-btn').textContent='Guardar';
+}
+
+function populateForm(c){
+  inputs.id.value = c.id;
+  inputs.expediente.value = c.expediente||'';
+  inputs.caratula.value = c.caratula||'';
+  inputs.tipo.value = c.tipo||'';
+  inputs.personal.value = c.personal||'';
+  inputs.fechaPase.value = c.fechaPase ? new Date(c.fechaPase).toISOString().slice(0,10) : '';
+  inputs.devolMotivo.value = c.devolMotivo||'';
+  inputs.devolFecha.value = c.devolFecha ? new Date(c.devolFecha).toISOString().slice(0,10) : '';
+  inputs.remDetalle.value = c.remDetalle||'';
+  inputs.remFecha.value = c.remFecha ? new Date(c.remFecha).toISOString().slice(0,10) : '';
+  setMultiSelect(inputs.vinculadas, c.vinculadas||[]);
+  setMultiSelect(inputs.acumuladas, c.acumuladas||[]);
+  $('#save-btn').textContent='Actualizar';
+}
+
+function printHtml(html){
+  const w = window.open('', '_blank');
+  w.document.open();
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Impresión</title>
+  <style>body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;padding:24px} h1{font-size:18px;margin:0 0 14px} .row{margin:6px 0} .muted{color:#64748b} .chip{display:inline-block;padding:4px 8px;border:1px solid #e5e7eb;border-radius:999px;font-size:12px} table{width:100%;border-collapse:collapse;margin-top:10px} td{padding:6px 8px;vertical-align:top;border-bottom:1px solid #f1f5f9}</style>
+  </head><body>${html}</body></html>`);
+  w.document.close();
+  w.focus();
+  w.print();
+}
+
+/* =========================
+   EVENTOS
+   ========================= */
+
+// Guardar
+$('#cause-form').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const isEdit = Boolean(inputs.id.value);
+  const id = isEdit ? inputs.id.value : db.ref('causes').push().key;
+
+  const obj = {
+    id,
+    expediente: inputs.expediente.value.trim(),
+    caratula: inputs.caratula.value.trim(),
+    tipo: inputs.tipo.value,
+    personal: inputs.personal.value,
+    fechaPase: inputs.fechaPase.value ? new Date(inputs.fechaPase.value).toISOString() : null,
+    devolMotivo: inputs.devolMotivo.value.trim() || null,
+    devolFecha: inputs.devolFecha.value ? new Date(inputs.devolFecha.value).toISOString() : null,
+    remDetalle: inputs.remDetalle.value.trim() || null,
+    remFecha: inputs.remFecha.value ? new Date(inputs.remFecha.value).toISOString() : null,
+    vinculadas: selectedValues(inputs.vinculadas),
+    acumuladas: selectedValues(inputs.acumuladas),
+    updatedAt: new Date().toISOString(),
+  };
+  if(!isEdit){ obj.createdAt = obj.updatedAt; }
+
+  if(!obj.expediente || !obj.caratula || !obj.tipo || !obj.personal || !obj.fechaPase){
+    alert('Completá los campos obligatorios.');
+    return;
+  }
+
+  await saveCause(obj);
+  clearForm();
+});
+
+// Limpiar
+$('#reset-btn').addEventListener('click', ()=> clearForm());
+
+// Delegación de acciones en tabla
+$('#table-body').addEventListener('click', async (e)=>{
+  const btn = e.target.closest('button');
+  if(!btn) return;
+  const id = btn.getAttribute('data-id');
+  const c = byId(id);
+  if(!c) return;
+  if(btn.classList.contains('btn-edit')){
+    populateForm(c);
+    window.scrollTo({top:0,behavior:'smooth'});
+  } else if(btn.classList.contains('btn-delete')){
+    if(confirm('¿Eliminar el registro? Esta acción no se puede deshacer.')){
+      await deleteCause(id);
+    }
+  } else if(btn.classList.contains('btn-view')){
+    const html = `
+      <h1>Expediente ${escapeHtml(c.expediente)}</h1>
+      <div class="row"><strong>Carátula:</strong> ${escapeHtml(c.caratula)||'—'}</div>
+      <div class="row"><strong>Tipo:</strong> <span class="chip">${escapeHtml(c.tipo)}</span></div>
+      <div class="row"><strong>Personal:</strong> ${escapeHtml(c.personal)||'—'}</div>
+      <div class="row"><strong>Fecha de pase:</strong> ${formatDate(c.fechaPase)}</div>
+      <div class="row"><strong>Devolución:</strong> ${escapeHtml(c.devolMotivo)||'—'} ${c.devolFecha?`(${formatDate(c.devolFecha)})`:''}</div>
+      <div class="row"><strong>Remisión:</strong> ${escapeHtml(c.remDetalle)||'—'} ${c.remFecha?`(${formatDate(c.remFecha)})`:''}</div>
+      <div class="row"><strong>Vinculadas:</strong> ${labelsFromIds(c.vinculadas)}</div>
+      <div class="row"><strong>Acumuladas:</strong> ${labelsFromIds(c.acumuladas)}</div>
+    `;
+    $('#modal-content').innerHTML = html;
+    $('#modal-back').classList.add('show');
+    $('#modal-print').onclick = ()=> printHtml(html);
+  }
+});
+
+// Modal cerrar
+$('#modal-close').addEventListener('click', ()=> $('#modal-back').classList.remove('show'));
+$('#modal-back').addEventListener('click', (e)=>{ if(e.target.id==='modal-back'){ $('#modal-back').classList.remove('show'); } });
+
+// Filtros
+function debounce(fn, ms){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; }
+['#search','#filter-tipo','#filter-personal','#filter-date-from','#filter-date-to'].forEach(sel=>{
+  const el = $(sel);
+  const evt = sel==='#search' ? 'input' : 'change';
+  const handler = sel==='#search' ? debounce(refreshTable,150) : refreshTable;
+  el.addEventListener(evt, handler);
+});
+
+// Imprimir lista
+$('#print-all').addEventListener('click', ()=> window.print());
 
 (function init(){ attachRealtimeListener(); })();
 </script>
 </body>
 </html>
-
