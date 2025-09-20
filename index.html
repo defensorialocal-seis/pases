@@ -6,12 +6,30 @@
     <title>Operador. Pase y Asignación de Expedientes</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { padding-top: 70px; }
-        .card { transition: transform 0.3s; position: relative; }
-        .card:hover { transform: translateY(-5px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        body { padding-top: 70px; background-color: #f8f9fa; }
+        .card { transition: transform 0.3s; position: relative; border: none; border-radius: 8px; }
+        .card:hover { transform: translateY(-3px); box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
         .card-actions { position: absolute; top: 10px; right: 10px; opacity: 0; transition: opacity 0.3s; }
         .card:hover .card-actions { opacity: 1; }
+        .expediente-card { cursor: pointer; }
+        .table-responsive { font-size: 0.9rem; }
+        .pagination { justify-content: center; margin-top: 20px; }
+        .filter-card { background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .stats-card { height: 100%; }
+        .stats-header { background-color: #0d6efd; color: white; border-top-left-radius: 8px; border-top-right-radius: 8px; }
+        @media (max-width: 992px) {
+            .section-title { font-size: 1.5rem; }
+            .btn-group-responsive { flex-direction: column; gap: 10px; }
+            .btn-group-responsive .btn { width: 100%; }
+            .stats-section { margin-top: 20px; }
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -24,9 +42,12 @@
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="section-title mb-0">Listado de Expedientes con pase/asignación</h2>
-            <div>
+            <div class="btn-group-responsive d-flex gap-2">
                 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#expedienteModal">
-                    <i class="fas fa-plus me-1"></i> Crear Nuevo Expediente
+                    <i class="fas fa-plus me-1"></i> Crear Nuevo
+                </button>
+                <button class="btn btn-info" id="btnPrintAll">
+                    <i class="fas fa-print me-1"></i> Imprimir
                 </button>
                 <button class="btn btn-outline-secondary" id="btnActualizar">
                     <i class="fas fa-sync-alt me-1"></i> Actualizar
@@ -34,56 +55,84 @@
             </div>
         </div>
 
-        <div class="card p-3 mb-4">
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <input type="text" id="searchInput" class="form-control" placeholder="Buscar por expediente, usuario...">
-                </div>
-                <div class="col-md-3">
-                    <input type="text" id="expedienteAsignadoFilter" class="form-control" placeholder="Filtrar por Expediente Asignado">
-                </div>
-                <div class="col-md-3">
-                    <select id="userFilter" class="form-select">
-                        <option value="">Filtrar por Usuario</option>
-                        <option>Bazante Nadia Romina</option>
-                        <option>Boillat Cesar Enrique</option>
-                        <option>Cardozo Maria Raquel</option>
-                        <option>Cedron Noelia Aurora</option>
-                        <option>Corrales Alicia Mariela</option>
-                        <option>Escobar Monica Graciela</option>
-                        <option>Fioravante Romulo</option>
-                        <option>Gonzalez Alberto Misael</option>
-                        <option>Gonzalez Juan Jose</option>
-                        <option>Gudiño Natalia Esther</option>
-                        <option>Magnani Enzo Luciano</option>
-                        <option>Pablos Patricia</option>
-                        <option>Palacios Ana Gabriela</option>
-                        <option>Ortega Lucia Noemi</option>
-                        <option>Ramos Marcelo Gustavo</option>
-                        <option>Riveros Patricia Soledad</option>
-                        <option>Sosa Rita Cecilia</option>
-                    </select>
-                </div>
-                <div class="col-md-5">
-                    <div class="input-group">
-                        <span class="input-group-text">Fecha de Pase</span>
-                        <input type="date" id="dateFilterStart" class="form-control">
-                        <span class="input-group-text">a</span>
-                        <input type="date" id="dateFilterEnd" class="form-control">
+        <div class="row">
+            <!-- Columna izquierda para el listado de expedientes -->
+            <div class="col-lg-8">
+                <div class="card p-3 mb-4 filter-card">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <input type="text" id="searchInput" class="form-control" placeholder="Buscar por expediente, usuario...">
+                        </div>
+                        <div class="col-md-3">
+                            <input type="text" id="expedienteAsignadoFilter" class="form-control" placeholder="Filtrar por Expediente Asignado">
+                        </div>
+                        <div class="col-md-3">
+                            <select id="userFilter" class="form-select">
+                                <option value="">Filtrar por Usuario</option>
+                                <option>Bazante Nadia Romina</option>
+                                <option>Boillat Cesar Enrique</option>
+                                <option>Cardozo Maria Raquel</option>
+                                <option>Cedron Noelia Aurora</option>
+                                <option>Corrales Alicia Mariela</option>
+                                <option>Escobar Monica Graciela</option>
+                                <option>Fioravante Romulo</option>
+                                <option>Gonzalez Alberto Misael</option>
+                                <option>Gonzalez Juan Jose</option>
+                                <option>Gudiño Natalia Esther</option>
+                                <option>Magnani Enzo Luciano</option>
+                                <option>Pablos Patricia</option>
+                                <option>Palacios Ana Gabriela</option>
+                                <option>Ortega Lucia Noemi</option>
+                                <option>Ramos Marcelo Gustavo</option>
+                                <option>Riveros Patricia Soledad</option>
+                                <option>Sosa Rita Cecilia</option>
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="input-group">
+                                <span class="input-group-text">Fecha de Pase</span>
+                                <input type="date" id="dateFilterStart" class="form-control">
+                                <span class="input-group-text">a</span>
+                                <input type="date" id="dateFilterEnd" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-primary w-100" id="btnSearch"><i class="fas fa-search"></i> Buscar</button>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-2">
-                    <button class="btn btn-primary" id="btnSearch"><i class="fas fa-search"></i> Buscar</button>
-                </div>
-            </div>
-        </div>
 
-        <div id="expedientesContainer">
-            <div class="text-center py-4">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Cargando...</span>
+                <div id="expedientesContainer">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="mt-2">Cargando expedientes...</p>
+                    </div>
                 </div>
-                <p class="mt-2">Cargando expedientes...</p>
+
+                <nav aria-label="Page navigation">
+                    <ul class="pagination" id="paginationContainer">
+                        <!-- La paginación se generará dinámicamente -->
+                    </ul>
+                </nav>
+            </div>
+
+            <!-- Columna derecha para el gráfico estadístico -->
+            <div class="col-lg-4 stats-section">
+                <div class="card stats-card">
+                    <div class="stats-header p-3">
+                        <h5 class="card-title mb-0"><i class="fas fa-chart-bar me-2"></i>Estadísticas por Usuario</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="userStatsChart"></canvas>
+                        </div>
+                        <div id="statsDetails" class="mt-3">
+                            <p class="text-center text-muted">Cargando estadísticas...</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -208,12 +257,14 @@
         const db = firebase.firestore();
         const expedientesRef = db.collection('causas');
         const expedientesContainer = document.getElementById('expedientesContainer');
+        const paginationContainer = document.getElementById('paginationContainer');
         const expedienteForm = document.getElementById('expedienteForm');
         const saveExpedienteBtn = document.getElementById('saveExpedienteBtn');
         const expedienteSpinner = document.getElementById('expedienteSpinner');
         const expedienteModal = document.getElementById('expedienteModal');
         const viewExpedienteModal = document.getElementById('viewExpedienteModal');
         const printExpedienteBtn = document.getElementById('printExpedienteBtn');
+        const btnPrintAll = document.getElementById('btnPrintAll');
 
         // Filtros
         const searchInput = document.getElementById('searchInput');
@@ -222,6 +273,15 @@
         const dateFilterStart = document.getElementById('dateFilterStart');
         const dateFilterEnd = document.getElementById('dateFilterEnd');
         const btnSearch = document.getElementById('btnSearch');
+
+        // Variables para paginación
+        let currentPage = 1;
+        const itemsPerPage = 20;
+        let allExpedientes = [];
+        let filteredExpedientes = [];
+        
+        // Variables para el gráfico
+        let userStatsChart = null;
 
         // Función para formatear la fecha a DD/MM/AAAA
         function formatDate(dateString) {
@@ -309,99 +369,326 @@
                                                  </div>
                                                  <p class="mt-2">Cargando expedientes...</p>
                                                </div>`;
-
-            const searchString = searchInput.value.toLowerCase();
-            const expedienteAsignadoString = expedienteAsignadoFilter.value.toLowerCase();
-            const userString = userFilter.value;
-            const startDate = dateFilterStart.value;
-            const endDate = dateFilterEnd.value;
-            let query = expedientesRef.orderBy('timestamp', 'desc');
-
-            if (userString) {
-                query = query.where('usuarioAsignado', '==', userString);
-            }
-
-            if (startDate) {
-                query = query.where('fechaPase', '>=', startDate);
-            }
-            if (endDate) {
-                query = query.where('fechaPase', '<=', endDate);
-            }
+            paginationContainer.innerHTML = '';
 
             try {
-                const snapshot = await query.get();
-                expedientesContainer.innerHTML = '';
+                const snapshot = await expedientesRef.orderBy('timestamp', 'desc').get();
+                allExpedientes = [];
                 
-                if (snapshot.empty) {
-                    expedientesContainer.innerHTML = '<p class="text-center text-muted mt-5">No hay expedientes registrados que coincidan con los criterios de búsqueda.</p>';
-                    return;
-                }
-
                 snapshot.forEach(doc => {
-                    const data = doc.data();
-
-                    // Filtrado en el cliente para "Búsqueda general" y "Expediente asignado"
-                    const matchesSearch = !searchString || 
-                                          data.numCausa.toLowerCase().includes(searchString) ||
-                                          data.usuarioAsignado.toLowerCase().includes(searchString);
-
-                    const matchesExpedienteAsignado = !expedienteAsignadoString || data.numCausa.toLowerCase().includes(expedienteAsignadoString);
-
-                    if (matchesSearch && matchesExpedienteAsignado) {
-                        const cardHtml = `
-                            <div class="card mb-3 expediente-card" data-id="${doc.id}">
-                                <div class="card-body">
-                                    <div class="card-actions">
-                                        <button class="btn btn-warning btn-sm edit-btn" data-id="${doc.id}">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="btn btn-danger btn-sm delete-btn" data-id="${doc.id}">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    </div>
-                                    <h5 class="card-title expediente-num-causa">Expediente: ${data.numCausa}</h5>
-                                    <p class="card-text">
-                                        <strong>Usuario Asignado:</strong> ${data.usuarioAsignado}<br>
-                                        <strong>Fecha de Pase:</strong> ${formatDate(data.fechaPase)}<br>
-                                        <strong>Otros Expedientes:</strong> ${data.otrosExpedientesCuerda || 'N/A'}<br>
-                                    </p>
-                                </div>
-                            </div>
-                        `;
-                        expedientesContainer.innerHTML += cardHtml;
-                    }
-                });
-                
-                if (expedientesContainer.innerHTML === '') {
-                    expedientesContainer.innerHTML = '<p class="text-center text-muted mt-5">No se encontraron expedientes con la búsqueda.</p>';
-                }
-
-                expedientesContainer.querySelectorAll('.edit-btn').forEach(button => {
-                    button.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        editExpediente(e.currentTarget.dataset.id);
-                    });
-                });
-
-                expedientesContainer.querySelectorAll('.delete-btn').forEach(button => {
-                    button.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        deleteExpediente(e.currentTarget.dataset.id);
+                    allExpedientes.push({
+                        id: doc.id,
+                        ...doc.data()
                     });
                 });
                 
-                expedientesContainer.querySelectorAll('.expediente-card').forEach(card => {
-                    card.addEventListener('click', (e) => {
-                        viewExpediente(e.currentTarget.dataset.id);
-                    });
-                });
-
+                applyFilters();
+                
             } catch (error) {
                 console.error("Error al cargar los expedientes:", error);
                 expedientesContainer.innerHTML = `<p class="text-center text-danger mt-5">Error al cargar expedientes: ${error.message}</p>`;
             }
         }
         
+        // Función para aplicar filtros
+        function applyFilters() {
+            const searchString = searchInput.value.toLowerCase();
+            const expedienteAsignadoString = expedienteAsignadoFilter.value.toLowerCase();
+            const userString = userFilter.value;
+            const startDate = dateFilterStart.value;
+            const endDate = dateFilterEnd.value;
+            
+            filteredExpedientes = allExpedientes.filter(data => {
+                // Filtrado por búsqueda general
+                const matchesSearch = !searchString || 
+                                      data.numCausa.toLowerCase().includes(searchString) ||
+                                      data.usuarioAsignado.toLowerCase().includes(searchString);
+
+                // Filtrado por expediente asignado
+                const matchesExpedienteAsignado = !expedienteAsignadoString || 
+                                                  data.numCausa.toLowerCase().includes(expedienteAsignadoString);
+
+                // Filtrado por usuario
+                const matchesUser = !userString || data.usuarioAsignado === userString;
+
+                // Filtrado por fecha (corregido)
+                let matchesDate = true;
+                if (startDate || endDate) {
+                    const fechaPase = data.fechaPase;
+                    if (!fechaPase) {
+                        matchesDate = false;
+                    } else {
+                        if (startDate && fechaPase < startDate) {
+                            matchesDate = false;
+                        }
+                        if (endDate && fechaPase > endDate) {
+                            matchesDate = false;
+                        }
+                    }
+                }
+
+                return matchesSearch && matchesExpedienteAsignado && matchesUser && matchesDate;
+            });
+            
+            currentPage = 1;
+            renderExpedientes();
+            renderPagination();
+            renderUserStats();
+        }
+        
+        // Función para renderizar expedientes según la página actual
+        function renderExpedientes() {
+            expedientesContainer.innerHTML = '';
+            
+            if (filteredExpedientes.length === 0) {
+                expedientesContainer.innerHTML = '<p class="text-center text-muted mt-5">No hay expedientes registrados que coincidan con los criterios de búsqueda.</p>';
+                return;
+            }
+            
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, filteredExpedientes.length);
+            const currentExpedientes = filteredExpedientes.slice(startIndex, endIndex);
+            
+            // Crear tabla minimalista
+            let tableHtml = `
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Expediente</th>
+                                <th>Usuario Asignado</th>
+                                <th>Fecha de Pase</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            currentExpedientes.forEach(data => {
+                tableHtml += `
+                    <tr class="expediente-row" data-id="${data.id}">
+                        <td class="fw-bold expediente-num-causa">${data.numCausa}</td>
+                        <td>${data.usuarioAsignado}</td>
+                        <td>${formatDate(data.fechaPase)}</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-primary view-btn" data-id="${data.id}">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning edit-btn" data-id="${data.id}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${data.id}">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tableHtml += `
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-muted mt-2">
+                    Mostrando ${startIndex + 1} - ${endIndex} de ${filteredExpedientes.length} expedientes
+                </div>
+            `;
+            
+            expedientesContainer.innerHTML = tableHtml;
+            
+            // Agregar event listeners a los botones
+            expedientesContainer.querySelectorAll('.view-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    viewExpediente(e.currentTarget.dataset.id);
+                });
+            });
+            
+            expedientesContainer.querySelectorAll('.edit-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    editExpediente(e.currentTarget.dataset.id);
+                });
+            });
+
+            expedientesContainer.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteExpediente(e.currentTarget.dataset.id);
+                });
+            });
+            
+            expedientesContainer.querySelectorAll('.expediente-row').forEach(row => {
+                row.addEventListener('click', (e) => {
+                    if (!e.target.closest('button')) {
+                        viewExpediente(e.currentTarget.dataset.id);
+                    }
+                });
+            });
+        }
+        
+        // Función para renderizar la paginación
+        function renderPagination() {
+            const totalPages = Math.ceil(filteredExpedientes.length / itemsPerPage);
+            
+            if (totalPages <= 1) {
+                paginationContainer.innerHTML = '';
+                return;
+            }
+            
+            let paginationHtml = '';
+            
+            // Botón anterior
+            paginationHtml += `
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" data-page="${currentPage - 1}">Anterior</a>
+                </li>
+            `;
+            
+            // Páginas
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+            
+            if (endPage - startPage + 1 < maxVisiblePages) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                paginationHtml += `
+                    <li class="page-item ${i === currentPage ? 'active' : ''}">
+                        <a class="page-link" href="#" data-page="${i}">${i}</a>
+                    </li>
+                `;
+            }
+            
+            // Botón siguiente
+            paginationHtml += `
+                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="#" data-page="${currentPage + 1}">Siguiente</a>
+                </li>
+            `;
+            
+            paginationContainer.innerHTML = paginationHtml;
+            
+            // Agregar event listeners a los enlaces de paginación
+            paginationContainer.querySelectorAll('.page-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const page = parseInt(e.target.dataset.page);
+                    if (!isNaN(page)) {
+                        currentPage = page;
+                        renderExpedientes();
+                        renderPagination();
+                        window.scrollTo(0, 0);
+                    }
+                });
+            });
+        }
+        
+        // Función para generar estadísticas por usuario
+        function renderUserStats() {
+            const statsByUser = {};
+            
+            filteredExpedientes.forEach(expediente => {
+                const user = expediente.usuarioAsignado;
+                if (!statsByUser[user]) {
+                    statsByUser[user] = 0;
+                }
+                statsByUser[user]++;
+            });
+            
+            // Ordenar usuarios por cantidad de expedientes (descendente)
+            const sortedUsers = Object.keys(statsByUser).sort((a, b) => statsByUser[b] - statsByUser[a]);
+            
+            // Preparar datos para el gráfico
+            const userLabels = sortedUsers;
+            const userData = sortedUsers.map(user => statsByUser[user]);
+            
+            // Crear o actualizar el gráfico
+            const ctx = document.getElementById('userStatsChart').getContext('2d');
+            
+            if (userStatsChart) {
+                userStatsChart.destroy();
+            }
+            
+            userStatsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: userLabels,
+                    datasets: [{
+                        label: 'Expedientes por Usuario',
+                        data: userData,
+                        backgroundColor: 'rgba(13, 110, 253, 0.7)',
+                        borderColor: 'rgba(13, 110, 253, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Cantidad de Expedientes'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Expedientes: ${context.raw}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Actualizar detalles de estadísticas
+            const statsDetails = document.getElementById('statsDetails');
+            if (sortedUsers.length === 0) {
+                statsDetails.innerHTML = '<p class="text-center text-muted">No hay datos para mostrar</p>';
+            } else {
+                let detailsHtml = `
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="fw-bold">Usuario</span>
+                        <span class="fw-bold">Cantidad</span>
+                    </div>
+                `;
+                
+                sortedUsers.forEach(user => {
+                    detailsHtml += `
+                        <div class="d-flex justify-content-between border-bottom py-1">
+                            <span>${user}</span>
+                            <span class="badge bg-primary rounded-pill">${statsByUser[user]}</span>
+                        </div>
+                    `;
+                });
+                
+                detailsHtml += `
+                    <div class="d-flex justify-content-between mt-2 fw-bold">
+                        <span>Total</span>
+                        <span class="badge bg-success rounded-pill">${filteredExpedientes.length}</span>
+                    </div>
+                `;
+                
+                statsDetails.innerHTML = detailsHtml;
+            }
+        }
+
         // Función para poblar el filtro de usuarios (no se usa, la lista es estática)
         async function populateUserFilter() {
         }
@@ -510,29 +797,89 @@
             };
         }
         
+        // Función para imprimir todos los expedientes filtrados
+        function imprimirTodosExpedientes() {
+            if (filteredExpedientes.length === 0) {
+                alert('No hay expedientes para imprimir.');
+                return;
+            }
+            
+            let printContent = `
+                <h2 class="text-center mb-4">Listado de Expedientes</h2>
+                <p><strong>Fecha de informe:</strong> ${new Date().toLocaleDateString()}</p>
+                <p><strong>Cantidad de expedientes:</strong> ${filteredExpedientes.length}</p>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Expediente</th>
+                            <th>Usuario Asignado</th>
+                            <th>Fecha de Pase</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            filteredExpedientes.forEach(expediente => {
+                printContent += `
+                    <tr>
+                        <td>${expediente.numCausa}</td>
+                        <td>${expediente.usuarioAsignado}</td>
+                        <td>${formatDate(expediente.fechaPase)}</td>
+                    </tr>
+                `;
+            });
+            
+            printContent += `
+                    </tbody>
+                </table>
+            `;
+            
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write('<html><head><title>Listado Completo de Expedientes</title>');
+            printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">');
+            printWindow.document.write('</head><body>');
+            printWindow.document.write('<div class="container mt-4">');
+            printWindow.document.write(printContent);
+            printWindow.document.write('</div></body></html>');
+            printWindow.document.close();
+            
+            printWindow.onload = () => {
+                printWindow.print();
+            };
+        }
+        
         // Asignar eventos a los filtros
-        btnSearch.addEventListener('click', loadExpedientes);
+        btnSearch.addEventListener('click', applyFilters);
 
         searchInput.addEventListener('keyup', (event) => {
             if (event.key === 'Enter') {
-                loadExpedientes();
+                applyFilters();
             }
         });
 
         expedienteAsignadoFilter.addEventListener('keyup', (event) => {
             if (event.key === 'Enter') {
-                loadExpedientes();
+                applyFilters();
             }
         });
 
-        userFilter.addEventListener('change', loadExpedientes);
-        dateFilterStart.addEventListener('change', loadExpedientes);
-        dateFilterEnd.addEventListener('change', loadExpedientes);
+        userFilter.addEventListener('change', applyFilters);
+        dateFilterStart.addEventListener('change', applyFilters);
+        dateFilterEnd.addEventListener('change', applyFilters);
+        
+        // Asignar evento al botón de imprimir todos
+        btnPrintAll.addEventListener('click', imprimirTodosExpedientes);
 
         // Llamar a las funciones de carga al iniciar la página
         document.addEventListener('DOMContentLoaded', () => {
             loadExpedientes();
             populateUserFilter();
+            
+            // Establecer fecha actual en el filtro de fin si está vacío
+            if (!dateFilterEnd.value) {
+                const today = new Date();
+                dateFilterEnd.value = today.toISOString().split('T')[0];
+            }
         });
         
         // Asignar el evento al botón de actualizar
