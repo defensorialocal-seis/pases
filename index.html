@@ -63,7 +63,6 @@
         </div>
 
         <div class="row">
-            <!-- Columna izquierda para el listado de expedientes -->
             <div class="col-lg-8">
                 <div class="card p-3 mb-4 filter-card">
                     <div class="row g-3">
@@ -103,6 +102,20 @@
                                 <input type="date" id="dateFilterEnd" class="form-control">
                             </div>
                         </div>
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="devolucionFilter">
+                                <label class="form-check-label" for="devolucionFilter">
+                                    Con Devolución
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="remisionFilter">
+                                <label class="form-check-label" for="remisionFilter">
+                                    Con Remisión
+                                </label>
+                            </div>
+                        </div>
                         <div class="col-md-2">
                             <button class="btn btn-primary w-100" id="btnSearch"><i class="fas fa-search"></i> Buscar</button>
                         </div>
@@ -124,12 +137,10 @@
 
                 <nav aria-label="Page navigation">
                     <ul class="pagination" id="paginationContainer">
-                        <!-- La paginación se generará dinámicamente -->
-                    </ul>
+                        </ul>
                 </nav>
             </div>
 
-            <!-- Columna derecha para el gráfico estadístico -->
             <div class="col-lg-4 stats-section">
                 <div class="card stats-card">
                     <div class="stats-header p-3">
@@ -158,7 +169,6 @@
         </div>
     </div>
 
-    <!-- Modal de confirmación de eliminación -->
     <div class="overlay" id="deleteOverlay"></div>
     <div class="delete-confirmation" id="deleteConfirmation">
         <h5 class="text-danger mb-3"><i class="fas fa-exclamation-triangle me-2"></i>Confirmar Eliminación</h5>
@@ -310,6 +320,9 @@
         const dateFilterStart = document.getElementById('dateFilterStart');
         const dateFilterEnd = document.getElementById('dateFilterEnd');
         const btnSearch = document.getElementById('btnSearch');
+        // NUEVO: Variables para los filtros de motivos especiales
+        const devolucionFilter = document.getElementById('devolucionFilter');
+        const remisionFilter = document.getElementById('remisionFilter');
 
         // Variables para paginación
         let currentPage = 1;
@@ -528,6 +541,17 @@
                 if (currentFilters.fechaFin) fechaText += `Hasta ${formatDate(currentFilters.fechaFin)}`;
                 activeFilters.innerHTML += `<span class="badge bg-success">${fechaText}</span>`;
             }
+
+            // NUEVO: Mostrar filtros de motivos especiales
+            if (currentFilters.devolucion) {
+                hasFilters = true;
+                activeFilters.innerHTML += `<span class="badge bg-danger">Con Devolución</span>`;
+            }
+
+            if (currentFilters.remision) {
+                hasFilters = true;
+                activeFilters.innerHTML += `<span class="badge bg-info text-dark">Con Remisión</span>`;
+            }
             
             activeFiltersContainer.style.display = hasFilters ? 'block' : 'none';
         }
@@ -539,14 +563,19 @@
             const userString = userFilter.value;
             const startDate = dateFilterStart.value;
             const endDate = dateFilterEnd.value;
-            
+            // NUEVO: Estado de las casillas de verificación
+            const showDevolucion = devolucionFilter.checked;
+            const showRemision = remisionFilter.checked;
+
             // Guardar filtros actuales
             currentFilters = {
                 search: searchString || null,
                 expediente: expedienteAsignadoString || null,
                 usuario: userString || null,
                 fechaInicio: startDate || null,
-                fechaFin: endDate || null
+                fechaFin: endDate || null,
+                devolucion: showDevolucion, // NUEVO
+                remision: showRemision     // NUEVO
             };
             
             // Mostrar filtros activos
@@ -565,7 +594,7 @@
                 // Filtrado por usuario
                 const matchesUser = !userString || data.usuarioAsignado === userString;
 
-                // Filtrado por fecha (corregido)
+                // Filtrado por fecha
                 let matchesDate = true;
                 if (startDate || endDate) {
                     const fechaPase = data.fechaPase;
@@ -581,7 +610,11 @@
                     }
                 }
 
-                return matchesSearch && matchesExpedienteAsignado && matchesUser && matchesDate;
+                // NUEVO: Filtrado por motivos especiales
+                const matchesSpecialReason = (!showDevolucion || (showDevolucion && data.devolucionMotivo)) &&
+                                             (!showRemision || (showRemision && data.remisionMotivo));
+
+                return matchesSearch && matchesExpedienteAsignado && matchesUser && matchesDate && matchesSpecialReason;
             });
             
             currentPage = 1;
@@ -1055,6 +1088,9 @@
         userFilter.addEventListener('change', applyFilters);
         dateFilterStart.addEventListener('change', applyFilters);
         dateFilterEnd.addEventListener('change', applyFilters);
+        // NUEVO: Event listeners para los filtros de motivos especiales
+        devolucionFilter.addEventListener('change', applyFilters);
+        remisionFilter.addEventListener('change', applyFilters);
         
         // Asignar evento al botón de imprimir todos
         btnPrintAll.addEventListener('click', imprimirTodosExpedientes);
