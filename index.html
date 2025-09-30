@@ -37,6 +37,10 @@
             background-color: #e3f2fd !important;
             border-left: 4px solid #0d6efd !important;
         }
+        /* Estilo para hacer el icono del calendario clickeable */
+        .clickable-calendar { 
+            cursor: pointer; 
+        }
     </style>
 </head>
 <body>
@@ -66,15 +70,18 @@
             <div class="col-lg-8">
                 <div class="card p-3 mb-4 filter-card">
                     <div class="row g-3">
-                        <div class="col-md-4">
-                            <input type="text" id="searchInput" class="form-control" placeholder="Buscar por expediente, usuario...">
+                        <div class="col-md-4 col-sm-6">
+                            <label class="form-label">Buscar por contenido</label>
+                            <input type="text" id="searchInput" class="form-control" placeholder="Expediente, usuario...">
                         </div>
-                        <div class="col-md-3">
-                            <input type="text" id="expedienteAsignadoFilter" class="form-control" placeholder="Filtrar por Expediente Asignado">
+                        <div class="col-md-3 col-sm-6">
+                            <label class="form-label">Filtrar por Expediente</label>
+                            <input type="text" id="expedienteAsignadoFilter" class="form-control" placeholder="Nro. Expediente Asignado">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-3 col-sm-6">
+                            <label class="form-label">Filtrar por Usuario</label>
                             <select id="userFilter" class="form-select">
-                                <option value="">Filtrar por Usuario</option>
+                                <option value="">Todos los Usuarios</option>
                                 <option>Bazante Nadia Romina</option>
                                 <option>Boillat Cesar Enrique</option>
                                 <option>Cardozo Maria Raquel</option>
@@ -94,29 +101,58 @@
                                 <option>Sosa Rita Cecilia</option>
                             </select>
                         </div>
-                        <div class="col-md-5">
-                            <div class="input-group">
-                                <span class="input-group-text">Fecha de Pase</span>
-                                <input type="date" id="dateFilterStart" class="form-control">
-                                <span class="input-group-text">a</span>
-                                <input type="date" id="dateFilterEnd" class="form-control">
+                        <div class="col-md-2 col-sm-6">
+                            <label class="form-label">Filtrar por Proceso</label>
+                            <select id="procesoFilter" class="form-select">
+                                <option value="">Todos</option>
+                                <option>DEUT</option>
+                                <option>CEJUME</option>
+                                <option>civil</option>
+                                <option>familia</option>
+                                <option>penal</option>
+                                <option>laboral</option>
+                                <option>violencia familiar</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 col-sm-12">
+                            <label class="form-label">Rango de Fecha de Pase</label>
+                            <div class="d-flex align-items-center">
+                                <div class="input-group me-1">
+                                    <span class="input-group-text clickable-calendar" data-target="dateFilterStart"><i class="fas fa-calendar-alt"></i></span>
+                                    <input type="date" id="dateFilterStart" class="form-control" placeholder="Desde">
+                                </div>
+                                <span class="input-group-text p-2 mx-1">a</span>
+                                <div class="input-group ms-1">
+                                    <span class="input-group-text clickable-calendar" data-target="dateFilterEnd"><i class="fas fa-calendar-alt"></i></span>
+                                    <input type="date" id="dateFilterEnd" class="form-control" placeholder="Hasta">
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="devolucionFilter">
-                                <label class="form-check-label" for="devolucionFilter">
-                                    Con Devolución
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="remisionFilter">
-                                <label class="form-check-label" for="remisionFilter">
-                                    Con Remisión
-                                </label>
+
+                        <div class="col-md-4 col-sm-8">
+                            <label class="form-label d-block">Filtros Especiales</label>
+                            <div class="d-flex flex-wrap gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="causaNuevaFilter">
+                                    <label class="form-check-label" for="causaNuevaFilter">Causa Nueva</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="causaAnteriorFilter">
+                                    <label class="form-check-label" for="causaAnteriorFilter">Causa Anterior</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="devolucionFilter">
+                                    <label class="form-check-label" for="devolucionFilter">Con Devolución</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="remisionFilter">
+                                    <label class="form-check-label" for="remisionFilter">Con Remisión</label>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-2">
+
+                        <div class="col-md-2 col-sm-4 d-flex align-items-end">
                             <button class="btn btn-primary w-100" id="btnSearch"><i class="fas fa-search"></i> Buscar</button>
                         </div>
                     </div>
@@ -195,6 +231,62 @@
                             <input type="text" class="form-control" id="numCausa" required>
                             <div class="invalid-feedback" id="numCausaFeedback">Por favor ingrese un número de causa válido.</div>
                         </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="tipoProceso" class="form-label">Tipo de Proceso *</label>
+                                <select class="form-select" id="tipoProceso" required>
+                                    <option value="">-- Seleccionar --</option>
+                                    <option>DEUT</option>
+                                    <option>CEJUME</option>
+                                    <option>civil</option>
+                                    <option>familia</option>
+                                    <option>penal</option>
+                                    <option>laboral</option>
+                                    <option>violencia familiar</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="detalleProceso" class="form-label">Detalle Proceso</label>
+                                <input type="text" class="form-control" id="detalleProceso">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Estado de la Causa *</label>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="estadoCausa" id="causaNuevaRadio" value="nueva" required>
+                                        <label class="form-check-label" for="causaNuevaRadio">
+                                            Causa Nueva
+                                        </label>
+                                    </div>
+                                    <select class="form-select mt-1" id="causaNuevaDetalle">
+                                        <option value="">-- Detalle --</option>
+                                        <option>inicio demanda</option>
+                                        <option>contestacion demanda</option>
+                                        <option>otros</option>
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="estadoCausa" id="causaAnteriorRadio" value="anterior">
+                                        <label class="form-check-label" for="causaAnteriorRadio">
+                                            Causa Anterior
+                                        </label>
+                                    </div>
+                                    <select class="form-select mt-1" id="causaAnteriorDetalle">
+                                        <option value="">-- Detalle --</option>
+                                        <option>inicio demanda</option>
+                                        <option>contestacion demanda</option>
+                                        <option>otros</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+
                         <div class="mb-3">
                             <label for="usuarioAsignado" class="form-label">Usuario Asignado *</label>
                             <select class="form-select" id="usuarioAsignado" required>
@@ -219,8 +311,11 @@
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label for="fechaPase" class="form-label">Fecha de Pase *</label>
-                            <input type="date" class="form-control" id="fechaPase" required>
+                            <label for="fechaPase" class="form-label">Fecha y Hora de Pase *</label>
+                            <div class="input-group">
+                                <span class="input-group-text clickable-calendar" data-target="fechaPase"><i class="fas fa-calendar-alt"></i></span>
+                                <input type="datetime-local" class="form-control" id="fechaPase" required>
+                                </div>
                         </div>
                         <div class="mb-3">
                             <label for="observacionesPase" class="form-label"><strong>Observaciones del Pase/asignación:</strong></label>
@@ -320,9 +415,13 @@
         const dateFilterStart = document.getElementById('dateFilterStart');
         const dateFilterEnd = document.getElementById('dateFilterEnd');
         const btnSearch = document.getElementById('btnSearch');
-        // NUEVO: Variables para los filtros de motivos especiales
         const devolucionFilter = document.getElementById('devolucionFilter');
         const remisionFilter = document.getElementById('remisionFilter');
+        const procesoFilter = document.getElementById('procesoFilter');
+        // NUEVOS FILTROS
+        const causaNuevaFilter = document.getElementById('causaNuevaFilter');
+        const causaAnteriorFilter = document.getElementById('causaAnteriorFilter');
+
 
         // Variables para paginación
         let currentPage = 1;
@@ -335,11 +434,31 @@
         // Variables para el gráfico
         let userStatsChart = null;
 
-        // Función para formatear la fecha a DD/MM/AAAA
-        function formatDate(dateString) {
-            if (!dateString) return 'N/A';
-            const [year, month, day] = dateString.split('-');
-            return `${day}/${month}/${year}`;
+        // Función para formatear fecha y hora a DD/MM/AAAA HH:MM hs
+        function formatDateTime(dateTimeString, includeTime = false) {
+            if (!dateTimeString) return 'N/A';
+            
+            let datePart, timePart = '';
+            
+            // Verifica si es un valor de datetime-local (YYYY-MM-DDTHH:MM)
+            if (dateTimeString.includes('T')) { 
+                [datePart, timePart] = dateTimeString.split('T');
+            } else { // Formato YYYY-MM-DD (date) o solo la fecha
+                datePart = dateTimeString;
+                timePart = '00:00'; // Valor predeterminado para el filtro si no tiene hora
+            }
+
+            const parts = datePart.split('-');
+            if (parts.length !== 3) return 'N/A';
+            const [year, month, day] = parts;
+            const formattedDate = `${day}/${month}/${year}`;
+            
+            if (includeTime && timePart) {
+                // Se asegura de tener HH:MM y añade 'hs'
+                return `${formattedDate} ${timePart} hs`;
+            }
+            
+            return formattedDate;
         }
 
         // Función para mostrar toast de notificación
@@ -349,19 +468,17 @@
             
             toastMessage.textContent = message;
             
+            const header = toast.querySelector('.toast-header');
+            header.classList.remove('bg-danger', 'bg-success', 'text-white'); // Limpiar clases previas
+
             if (type === 'error') {
-                toast.querySelector('.toast-header').classList.add('bg-danger', 'text-white');
+                header.classList.add('bg-danger', 'text-white');
             } else if (type === 'success') {
-                toast.querySelector('.toast-header').classList.add('bg-success', 'text-white');
+                header.classList.add('bg-success', 'text-white');
             }
             
             const bsToast = new bootstrap.Toast(toast);
             bsToast.show();
-            
-            // Resetear clases después de ocultar
-            toast.addEventListener('hidden.bs.toast', () => {
-                toast.querySelector('.toast-header').classList.remove('bg-danger', 'bg-success', 'text-white');
-            });
         }
 
         // Función para verificar si un número de causa ya existe
@@ -389,20 +506,26 @@
         saveExpedienteBtn.addEventListener('click', async () => {
             const expedienteId = document.getElementById('expedienteId').value;
             const numCausa = document.getElementById('numCausa').value.trim();
+            const tipoProceso = document.getElementById('tipoProceso').value;
+            const detalleProceso = document.getElementById('detalleProceso').value;
+            const estadoCausaRadio = document.querySelector('input[name="estadoCausa"]:checked');
+            const estadoCausa = estadoCausaRadio ? estadoCausaRadio.value : '';
+            const causaNuevaDetalle = document.getElementById('causaNuevaDetalle').value;
+            const causaAnteriorDetalle = document.getElementById('causaAnteriorDetalle').value;
+            const detalleEstadoCausa = estadoCausa === 'nueva' ? causaNuevaDetalle : (estadoCausa === 'anterior' ? causaAnteriorDetalle : '');
             const usuarioAsignado = document.getElementById('usuarioAsignado').value;
-            const fechaPase = document.getElementById('fechaPase').value;
+            const fechaPase = document.getElementById('fechaPase').value; // YYYY-MM-DDTHH:MM
             const observacionesPase = document.getElementById('observacionesPase').value;
             const otrosExpedientesCuerda = document.getElementById('otrosExpedientesCuerda').value;
             const otrosExpedientesAcumulados = document.getElementById('otrosExpedientesAcumulados').value;
             const devolucionMotivo = document.getElementById('devolucionMotivo').value;
             const remisionMotivo = document.getElementById('remisionMotivo').value;
 
-            if (!numCausa || !usuarioAsignado || !fechaPase) {
+            if (!numCausa || !usuarioAsignado || !fechaPase || !tipoProceso || !estadoCausa) {
                 showToast('Por favor, complete todos los campos obligatorios.', 'error');
                 return;
             }
 
-            // Verificar si el número de causa ya existe
             const exists = await checkExpedienteExists(numCausa, expedienteId);
             if (exists) {
                 numCausaInput.classList.add('is-invalid');
@@ -414,29 +537,28 @@
             expedienteSpinner.style.display = 'inline-block';
             saveExpedienteBtn.disabled = true;
 
+            const expedienteData = {
+                numCausa,
+                tipoProceso,
+                detalleProceso,
+                estadoCausa,
+                detalleEstadoCausa,
+                usuarioAsignado,
+                fechaPase,
+                observacionesPase,
+                otrosExpedientesCuerda,
+                otrosExpedientesAcumulados,
+                devolucionMotivo,
+                remisionMotivo
+            };
+
             try {
                 if (expedienteId) {
-                    await expedientesRef.doc(expedienteId).update({
-                        numCausa,
-                        usuarioAsignado,
-                        fechaPase,
-                        observacionesPase,
-                        otrosExpedientesCuerda,
-                        otrosExpedientesAcumulados,
-                        devolucionMotivo,
-                        remisionMotivo
-                    });
+                    await expedientesRef.doc(expedienteId).update(expedienteData);
                     showToast('Expediente actualizado con éxito!', 'success');
                 } else {
                     await expedientesRef.add({
-                        numCausa,
-                        usuarioAsignado,
-                        fechaPase,
-                        observacionesPase,
-                        otrosExpedientesCuerda,
-                        otrosExpedientesAcumulados,
-                        devolucionMotivo,
-                        remisionMotivo,
+                        ...expedienteData,
                         timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     });
                     showToast('Expediente guardado con éxito!', 'success');
@@ -466,8 +588,41 @@
                 document.getElementById('expedienteModalTitle').textContent = 'Nuevo Expediente';
                 document.getElementById('saveExpedienteBtn').textContent = 'Guardar Expediente';
                 numCausaInput.classList.remove('is-invalid');
+            } else {
+                // Lógica de edición
+                const expedienteId = document.getElementById('expedienteId').value;
+                if (expedienteId) {
+                    const data = allExpedientes.find(e => e.id === expedienteId);
+                    if (data) {
+                        const nuevaDetalle = document.getElementById('causaNuevaDetalle');
+                        const anteriorDetalle = document.getElementById('causaAnteriorDetalle');
+                        
+                        if (data.estadoCausa === 'nueva') {
+                            document.getElementById('causaNuevaRadio').checked = true;
+                            nuevaDetalle.value = data.detalleEstadoCausa || '';
+                            anteriorDetalle.value = '';
+                        } else if (data.estadoCausa === 'anterior') {
+                            document.getElementById('causaAnteriorRadio').checked = true;
+                            anteriorDetalle.value = data.detalleEstadoCausa || '';
+                            nuevaDetalle.value = '';
+                        } else {
+                            document.querySelector('input[name="estadoCausa"]').checked = false; 
+                            nuevaDetalle.value = '';
+                            anteriorDetalle.value = '';
+                        }
+                    }
+                }
             }
         });
+        
+        // Manejar la lógica de selección de detalle de causa
+        document.getElementById('causaNuevaRadio').addEventListener('change', () => {
+            document.getElementById('causaAnteriorDetalle').value = '';
+        });
+        document.getElementById('causaAnteriorRadio').addEventListener('change', () => {
+            document.getElementById('causaNuevaDetalle').value = '';
+        });
+
 
         // Validar número de causa en tiempo real
         numCausaInput.addEventListener('blur', async () => {
@@ -533,19 +688,33 @@
                 hasFilters = true;
                 activeFilters.innerHTML += `<span class="badge bg-warning text-dark">Usuario: "${currentFilters.usuario}"</span>`;
             }
+
+            if (currentFilters.proceso) {
+                hasFilters = true;
+                activeFilters.innerHTML += `<span class="badge bg-secondary">Proceso: "${currentFilters.proceso}"</span>`;
+            }
             
             if (currentFilters.fechaInicio || currentFilters.fechaFin) {
                 hasFilters = true;
                 let fechaText = 'Fechas: ';
-                if (currentFilters.fechaInicio) fechaText += `Desde ${formatDate(currentFilters.fechaInicio)} `;
-                if (currentFilters.fechaFin) fechaText += `Hasta ${formatDate(currentFilters.fechaFin)}`;
+                if (currentFilters.fechaInicio) fechaText += `Desde ${formatDateTime(currentFilters.fechaInicio)} `; // Muestra DD/MM/AAAA
+                if (currentFilters.fechaFin) fechaText += `Hasta ${formatDateTime(currentFilters.fechaFin)}`; // Muestra DD/MM/AAAA
                 activeFilters.innerHTML += `<span class="badge bg-success">${fechaText}</span>`;
             }
+            
+            // NUEVOS FILTROS
+            if (currentFilters.causaNueva) {
+                hasFilters = true;
+                activeFilters.innerHTML += `<span class="badge bg-danger">Causa Nueva</span>`;
+            }
+            if (currentFilters.causaAnterior) {
+                hasFilters = true;
+                activeFilters.innerHTML += `<span class="badge bg-danger">Causa Anterior</span>`;
+            }
 
-            // NUEVO: Mostrar filtros de motivos especiales
             if (currentFilters.devolucion) {
                 hasFilters = true;
-                activeFilters.innerHTML += `<span class="badge bg-danger">Con Devolución</span>`;
+                activeFilters.innerHTML += `<span class="badge bg-warning text-dark">Con Devolución</span>`;
             }
 
             if (currentFilters.remision) {
@@ -561,60 +730,74 @@
             const searchString = searchInput.value.toLowerCase();
             const expedienteAsignadoString = expedienteAsignadoFilter.value.toLowerCase();
             const userString = userFilter.value;
+            const procesoString = procesoFilter.value; 
             const startDate = dateFilterStart.value;
             const endDate = dateFilterEnd.value;
-            // NUEVO: Estado de las casillas de verificación
             const showDevolucion = devolucionFilter.checked;
             const showRemision = remisionFilter.checked;
+            // NUEVOS FILTROS
+            const showCausaNueva = causaNuevaFilter.checked;
+            const showCausaAnterior = causaAnteriorFilter.checked;
 
             // Guardar filtros actuales
             currentFilters = {
                 search: searchString || null,
                 expediente: expedienteAsignadoString || null,
                 usuario: userString || null,
+                proceso: procesoString || null,
                 fechaInicio: startDate || null,
                 fechaFin: endDate || null,
-                devolucion: showDevolucion, // NUEVO
-                remision: showRemision     // NUEVO
+                devolucion: showDevolucion,
+                remision: showRemision,
+                causaNueva: showCausaNueva, 
+                causaAnterior: showCausaAnterior 
             };
             
             // Mostrar filtros activos
             showActiveFilters();
             
             filteredExpedientes = allExpedientes.filter(data => {
-                // Filtrado por búsqueda general
                 const matchesSearch = !searchString || 
                                       data.numCausa.toLowerCase().includes(searchString) ||
                                       data.usuarioAsignado.toLowerCase().includes(searchString);
 
-                // Filtrado por expediente asignado
                 const matchesExpedienteAsignado = !expedienteAsignadoString || 
                                                   data.numCausa.toLowerCase().includes(expedienteAsignadoString);
 
-                // Filtrado por usuario
                 const matchesUser = !userString || data.usuarioAsignado === userString;
+
+                const matchesProceso = !procesoString || data.tipoProceso === procesoString; 
+
 
                 // Filtrado por fecha
                 let matchesDate = true;
                 if (startDate || endDate) {
-                    const fechaPase = data.fechaPase;
-                    if (!fechaPase) {
+                    const fullDateTime = data.fechaPase;
+                    if (!fullDateTime) {
                         matchesDate = false;
                     } else {
-                        if (startDate && fechaPase < startDate) {
+                        // Extraer solo la parte YYYY-MM-DD para la comparación del rango
+                        const datePart = fullDateTime.split('T')[0]; 
+                        
+                        if (startDate && datePart < startDate) {
                             matchesDate = false;
                         }
-                        if (endDate && fechaPase > endDate) {
+                        if (endDate && datePart > endDate) {
                             matchesDate = false;
                         }
                     }
                 }
 
-                // NUEVO: Filtrado por motivos especiales
+                // Filtrado por motivos especiales
                 const matchesSpecialReason = (!showDevolucion || (showDevolucion && data.devolucionMotivo)) &&
                                              (!showRemision || (showRemision && data.remisionMotivo));
 
-                return matchesSearch && matchesExpedienteAsignado && matchesUser && matchesDate && matchesSpecialReason;
+                // Filtrado por estado de causa (NUEVO)
+                const matchesEstadoCausa = (!showCausaNueva && !showCausaAnterior) ||
+                                            (showCausaNueva && data.estadoCausa === 'nueva') ||
+                                            (showCausaAnterior && data.estadoCausa === 'anterior');
+
+                return matchesSearch && matchesExpedienteAsignado && matchesUser && matchesProceso && matchesDate && matchesSpecialReason && matchesEstadoCausa;
             });
             
             currentPage = 1;
@@ -643,6 +826,7 @@
                         <thead class="table-light">
                             <tr>
                                 <th>Expediente</th>
+                                <th>Proceso</th>
                                 <th>Usuario Asignado</th>
                                 <th>Fecha de Pase</th>
                                 <th class="text-end">Acciones</th>
@@ -653,13 +837,15 @@
             
             currentExpedientes.forEach(data => {
                 // Aplicar estilos si hay filtros activos
-                const isFiltered = currentFilters.usuario && data.usuarioAsignado === currentFilters.usuario;
+                const isFiltered = (currentFilters.usuario && data.usuarioAsignado === currentFilters.usuario) || 
+                                   (currentFilters.proceso && data.tipoProceso === currentFilters.proceso);
                 
                 tableHtml += `
                     <tr class="expediente-row ${isFiltered ? 'filter-active' : ''}" data-id="${data.id}">
                         <td class="fw-bold expediente-num-causa">${data.numCausa}</td>
+                        <td>${data.tipoProceso || 'N/A'}</td>
                         <td>${data.usuarioAsignado}</td>
-                        <td>${formatDate(data.fechaPase)}</td>
+                        <td>${formatDateTime(data.fechaPase, true)}</td> 
                         <td class="text-end">
                             <button class="btn btn-sm btn-outline-primary view-btn" data-id="${data.id}">
                                 <i class="fas fa-eye"></i>
@@ -933,8 +1119,33 @@
                     const data = doc.data();
                     document.getElementById('expedienteId').value = doc.id;
                     document.getElementById('numCausa').value = data.numCausa;
+                    document.getElementById('tipoProceso').value = data.tipoProceso || '';
+                    document.getElementById('detalleProceso').value = data.detalleProceso || '';
+                    
+                    const nuevaRadio = document.getElementById('causaNuevaRadio');
+                    const anteriorRadio = document.getElementById('causaAnteriorRadio');
+                    const nuevaDetalle = document.getElementById('causaNuevaDetalle');
+                    const anteriorDetalle = document.getElementById('causaAnteriorDetalle');
+
+                    if (data.estadoCausa === 'nueva') {
+                        nuevaRadio.checked = true;
+                        anteriorRadio.checked = false;
+                        nuevaDetalle.value = data.detalleEstadoCausa || '';
+                        anteriorDetalle.value = '';
+                    } else if (data.estadoCausa === 'anterior') {
+                        nuevaRadio.checked = false;
+                        anteriorRadio.checked = true;
+                        anteriorDetalle.value = data.detalleEstadoCausa || '';
+                        nuevaDetalle.value = '';
+                    } else {
+                        nuevaRadio.checked = false;
+                        anteriorRadio.checked = false;
+                        nuevaDetalle.value = '';
+                        anteriorDetalle.value = '';
+                    }
+
                     document.getElementById('usuarioAsignado').value = data.usuarioAsignado;
-                    document.getElementById('fechaPase').value = data.fechaPase;
+                    document.getElementById('fechaPase').value = data.fechaPase; // YYYY-MM-DDTHH:MM
                     document.getElementById('observacionesPase').value = data.observacionesPase || '';
                     document.getElementById('otrosExpedientesCuerda').value = data.otrosExpedientesCuerda || '';
                     document.getElementById('otrosExpedientesAcumulados').value = data.otrosExpedientesAcumulados || '';
@@ -962,11 +1173,19 @@
                 if (doc.exists) {
                     const data = doc.data();
                     const viewBody = document.getElementById('viewExpedienteBody');
+                    
+                    const estadoCausaDisplay = data.estadoCausa === 'nueva' ? 'Causa Nueva' : (data.estadoCausa === 'anterior' ? 'Causa Anterior' : 'N/A');
+                    const detalleEstadoCausaDisplay = data.detalleEstadoCausa || 'N/A';
+                    
                     viewBody.innerHTML = `
                         <div id="printContent">
                             <p><strong>Número de Causa:</strong> ${data.numCausa}</p>
+                            <p><strong>Tipo de Proceso:</strong> ${data.tipoProceso || 'N/A'}</p>
+                            <p><strong>Detalle Proceso:</strong> ${data.detalleProceso || 'N/A'}</p>
+                            <p><strong>Estado de la Causa:</strong> ${estadoCausaDisplay} (${detalleEstadoCausaDisplay})</p>
+                            <hr>
                             <p><strong>Usuario Asignado:</strong> ${data.usuarioAsignado}</p>
-                            <p><strong>Fecha de Pase:</strong> ${formatDate(data.fechaPase)}</p>
+                            <p><strong>Fecha y Hora de Pase:</strong> ${formatDateTime(data.fechaPase, true)}</p>
                             <p><strong>Observaciones del Pase/asignación:</strong> ${data.observacionesPase || 'N/A'}</p>
                             <p><strong>Otros Expedientes por Cuerda:</strong> ${data.otrosExpedientesCuerda || 'N/A'}</p>
                             <p><strong>Otros Expedientes Acumulados:</strong> ${data.otrosExpedientesAcumulados || 'N/A'}</p>
@@ -992,11 +1211,17 @@
         
         // Función para imprimir el contenido del modal
         function imprimirExpediente(expediente) {
+            const estadoCausaDisplay = expediente.estadoCausa === 'nueva' ? 'Causa Nueva' : (expediente.estadoCausa === 'anterior' ? 'Causa Anterior' : 'N/A');
+            const detalleEstadoCausaDisplay = expediente.detalleEstadoCausa || 'N/A';
+            
             const printContent = `
                 <h2>Detalles del Expediente</h2>
                 <p><strong>Número de Causa:</strong> ${expediente.numCausa}</p>
+                <p><strong>Tipo de Proceso:</strong> ${expediente.tipoProceso || 'N/A'}</p>
+                <p><strong>Detalle Proceso:</strong> ${expediente.detalleProceso || 'N/A'}</p>
+                <p><strong>Estado de la Causa:</strong> ${estadoCausaDisplay} (${detalleEstadoCausaDisplay})</p>
                 <p><strong>Usuario Asignado:</strong> ${expediente.usuarioAsignado}</p>
-                <p><strong>Fecha de Pase:</strong> ${formatDate(expediente.fechaPase)}</p>
+                <p><strong>Fecha y Hora de Pase:</strong> ${formatDateTime(expediente.fechaPase, true)}</p>
                 <p><strong>Observaciones del Pase/asignación:</strong> ${expediente.observacionesPase || 'N/A'}</p>
                 <p><strong>Otros Expedientes por Cuerda:</strong> ${expediente.otrosExpedientesCuerda || 'N/A'}</p>
                 <p><strong>Otros Expedientes Acumulados:</strong> ${expediente.otrosExpedientesAcumulados || 'N/A'}</p>
@@ -1031,8 +1256,9 @@
                     <thead class="table-light">
                         <tr>
                             <th>Expediente</th>
+                            <th>Proceso</th>
                             <th>Usuario Asignado</th>
-                            <th>Fecha de Pase</th>
+                            <th>Fecha y Hora de Pase</th>
                             <th>Observaciones</th>
                         </tr>
                     </thead>
@@ -1043,8 +1269,9 @@
                 printContent += `
                     <tr>
                         <td>${expediente.numCausa}</td>
+                        <td>${expediente.tipoProceso || 'N/A'}</td>
                         <td>${expediente.usuarioAsignado}</td>
-                        <td>${formatDate(expediente.fechaPase)}</td>
+                        <td>${formatDateTime(expediente.fechaPase, true)}</td>
                         <td>${expediente.observacionesPase || 'N/A'}</td>
                     </tr>
                 `;
@@ -1086,14 +1313,32 @@
         });
 
         userFilter.addEventListener('change', applyFilters);
+        procesoFilter.addEventListener('change', applyFilters); 
         dateFilterStart.addEventListener('change', applyFilters);
         dateFilterEnd.addEventListener('change', applyFilters);
-        // NUEVO: Event listeners para los filtros de motivos especiales
         devolucionFilter.addEventListener('change', applyFilters);
         remisionFilter.addEventListener('change', applyFilters);
+        // NUEVOS EVENT LISTENERS PARA CAUSA NUEVA/ANTERIOR
+        causaNuevaFilter.addEventListener('change', applyFilters);
+        causaAnteriorFilter.addEventListener('change', applyFilters);
         
         // Asignar evento al botón de imprimir todos
         btnPrintAll.addEventListener('click', imprimirTodosExpedientes);
+
+        // Event listener para hacer clic en el icono del calendario y desplegar el selector nativo
+        document.addEventListener('click', (e) => {
+            const clickableCalendar = e.target.closest('.clickable-calendar');
+            if (clickableCalendar) {
+                e.preventDefault();
+                const targetId = clickableCalendar.dataset.target;
+                const input = document.getElementById(targetId);
+                
+                if (input) {
+                    // Usamos click() para intentar abrir el selector nativo de fecha/hora
+                    input.click(); 
+                }
+            }
+        });
 
         // Llamar a las funciones de carga al iniciar la página
         document.addEventListener('DOMContentLoaded', () => {
@@ -1104,6 +1349,15 @@
             if (!dateFilterEnd.value) {
                 const today = new Date();
                 dateFilterEnd.value = today.toISOString().split('T')[0];
+            }
+            
+            // Establecer fecha y hora actual en el campo de pase si está vacío
+            const fechaPaseInput = document.getElementById('fechaPase');
+            if (!fechaPaseInput.value) {
+                const now = new Date();
+                // Obtener YYYY-MM-DDTHH:MM para datetime-local
+                const localISODate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+                fechaPaseInput.value = localISODate;
             }
         });
         
