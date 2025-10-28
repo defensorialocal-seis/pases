@@ -757,9 +757,14 @@
             showActiveFilters();
             
             filteredExpedientes = allExpedientes.filter(data => {
+                // Búsqueda en todos los campos de texto
                 const matchesSearch = !searchString || 
-                                      data.numCausa.toLowerCase().includes(searchString) ||
-                                      data.usuarioAsignado.toLowerCase().includes(searchString);
+                    Object.values(data).some(value => {
+                        if (value && typeof value === 'string') {
+                            return value.toLowerCase().includes(searchString);
+                        }
+                        return false;
+                    });
 
                 const matchesExpedienteAsignado = !expedienteAsignadoString || 
                                                   data.numCausa.toLowerCase().includes(expedienteAsignadoString);
@@ -767,7 +772,6 @@
                 const matchesUser = !userString || data.usuarioAsignado === userString;
 
                 const matchesProceso = !procesoString || data.tipoProceso === procesoString; 
-
 
                 // Filtrado por fecha
                 let matchesDate = true;
